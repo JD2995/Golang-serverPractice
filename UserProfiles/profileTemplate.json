@@ -1,0 +1,18 @@
+{
+    "ID" : "{{.ID}}",
+    "name": "{{.Name}}",
+    "lastname": "{{.Lastname}}",
+    "address": {
+        "provincia": "{{.Address.Provincia}}",
+        "canton": "{{.Address.Canton}}",
+        "distrito": "{{.Address.Distrito}}"
+    },
+    "phones": [{{range $index, $element := .Phones -}}
+        {{if gt $index 0 -}}
+            ,
+        {{- end}}
+        {{- . -}}
+        
+    {{end}}],
+    "politicalParty": {{if .PoliticalParty}}"{{.PoliticalParty}}"{{else}}"Ninguno"{{end}}
+}

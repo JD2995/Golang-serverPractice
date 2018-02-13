@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<users>
+	{{range .Users}}
+	<user>
+		<name>{{.Name}}</name>
+		<lastname>{{.Lastname}}</lastname>
+		<ID>{{.ID}}</ID>
+		<address>
+			<provincia>{{.Address.Provincia}}</provincia>
+			<canton>{{.Address.Canton}}</canton>
+			<distrito>{{.Address.Distrito}}</distrito>
+		</address>
+		<politicalParty>{{if .PoliticalParty}}{{.PoliticalParty}}{{else}}Ninguno{{end}}</politicalParty>
+		<phones type="array">
+            {{range $index, $element := .Phones -}}
+                <value>{{.}}</value>
+            {{end}}
+        </phones>
+	</user>
+	{{end}}
+</users>

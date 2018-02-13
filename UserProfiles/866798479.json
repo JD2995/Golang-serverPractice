@@ -1,0 +1,11 @@
+{
+    "ID" : "866798479",
+    "name": "Mariana",
+    "lastname": "Fonseca",
+    "address": {
+        "provincia": "Cartago",
+        "canton": "Cartago",
+        "distrito": "Oriental"
+    },
+    "phones": [45225343,77080955,63789906]
+}

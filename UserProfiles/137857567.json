@@ -1,0 +1,12 @@
+{
+    "ID" : "137857567",
+    "name": "Manuela",
+    "lastname": "Rodríguez",
+    "address": {
+        "provincia": "Heredia",
+        "canton": "Heredia",
+        "distrito": "Vara Blanca"
+    },
+    "phones": [78466214,75696987,53235415],
+    "politicalParty": "Movimiento Libertario"
+}
