@@ -26,7 +26,7 @@ type User struct {
 	Lastname       string  `json:"lastname" binding:"required"`
 	Address        Address `json:"address" binding:"required"`
 	Phones         []int   `json:"phones" binding:"required"`
-	PoliticalParty string  `json: politicalParty`
+	PoliticalParty string  `json:"politicalParty"`
 }
 
 func readUserFile(userID string) ([]byte, error) {
@@ -120,10 +120,11 @@ func deleteUser(context *gin.Context) {
 
 	id := context.Param("id")
 	err := os.Remove("UserProfiles/" + id + ".json")
-	checkError(err, "The user wasn't deleted")
-	context.JSON(200, gin.H{
-		"mensaje": "The user was successfully deleted",
-	})
+	if err != nil {
+		log.Println(err)
+		context.AbortWithStatus(404)
+	}
+	context.Data(204, gin.MIMEHTML, nil)
 }
 
 func searchUsersFiles() []string {

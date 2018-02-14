@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +56,77 @@ func fillUserProfile(user User) error {
 	return nil
 }
 
+func validRequiredFieldsJSON(structure interface{}, jsonBytes []byte) (map[string]*json.RawMessage, error) {
+	userMap := make(map[string]*json.RawMessage)
+	err := json.Unmarshal(jsonBytes, &userMap)
+	if err != nil {
+		return nil, err
+	}
+
+	t := reflect.TypeOf(structure)
+	for i := 0; i < t.NumField(); i++ {
+		tagMap := make(map[string]string)
+		nameField := t.Field(i).Name
+		rawTag := strings.Replace(string(t.Field(i).Tag), "\"", "", -1)
+		tags := strings.Split(rawTag, " ")
+		for _, tag := range tags {
+			tagElements := strings.Split(tag, ":")
+			tagMap[tagElements[0]] = tagElements[1]
+
+		}
+
+		if tagMap["json"] != "" {
+			nameField = tagMap["json"]
+		}
+		//Doesn't matter if the value is not found
+		if tagMap["binding"] != "required" {
+			continue
+		}
+
+		//If the Required field is nil
+		if userMap[nameField] == nil {
+			return nil, fmt.Errorf("Required %s field not given", nameField)
+		}
+	}
+	return userMap, nil
+}
+
+func uploadUser(context *gin.Context) {
+	fileHeader, err := context.FormFile("file")
+	if err != nil {
+		log.Printf("The file wasn't uploaded: %v\n", err)
+	}
+
+	//Read the uploaded file
+	file, err := fileHeader.Open()
+	if err != nil {
+		log.Printf("Cannot read the file: %v\n", err)
+	}
+	buffer := make([]byte, 2048)
+	nBytes, err := file.Read(buffer)
+	if err != nil {
+		log.Printf("Cannot read the file: %v\n", err)
+	}
+	buffer = buffer[:nBytes]
+
+	user, err := validRequiredFieldsJSON(User{}, buffer)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return
+	}
+	id := make([]byte, 2048)
+	user["ID"].UnmarshalJSON(id)
+	fmt.Printf("%s\n", user)
+	err = context.SaveUploadedFile(fileHeader, "UserProfiles/"+string(id)+".json")
+	if err != nil {
+		log.Printf("The file wasn't saved: %v\n", err)
+	}
+
+	context.JSON(201, gin.H{
+		"URI": "/user/" + string(id),
+	})
+}
+
 func main() {
 	router := gin.Default()
 
@@ -65,5 +139,6 @@ func main() {
 	router.POST("/user", postUser)
 	router.POST("/user/:id/:data", postUserData)
 	router.DELETE("/user/:id", deleteUser)
+	router.POST("/upload/user", uploadUser)
 	router.Run(":8080") // listen and serve on 127.0.0.1:8080
 }
