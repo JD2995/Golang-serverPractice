@@ -1,4 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
+{{define "politicalParties"}}
+	{{with getPoliticalParties .Users}}
+		<politicalParties>
+			{{range .}}
+				<party>
+					<name>{{.name}}</name>
+				</party>
+			{{end}}
+		</politicalParties>
+	{{end}}
+{{end}}
+{{template "politicalParties" .}}
 <users>
 	{{range .Users}}
 	<user>

@@ -116,7 +116,6 @@ func uploadUser(context *gin.Context) {
 	}
 	id := make([]byte, 2048)
 	user["ID"].UnmarshalJSON(id)
-	fmt.Printf("%s\n", user)
 	err = context.SaveUploadedFile(fileHeader, "UserProfiles/"+string(id)+".json")
 	if err != nil {
 		log.Printf("The file wasn't saved: %v\n", err)
