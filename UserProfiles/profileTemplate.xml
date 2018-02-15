@@ -4,7 +4,8 @@
 		<politicalParties>
 			{{range .}}
 				<party>
-					<name>{{.name}}</name>
+					<name>{{.Name}}</name>
+					<quantityMembers>{{.QuantityMembers}}</quantityMembers>
 				</party>
 			{{end}}
 		</politicalParties>

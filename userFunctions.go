@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -252,8 +253,8 @@ func getUsersXML(context *gin.Context) {
 	}
 
 	type PoliticalParty struct {
-		name            string
-		quantityMembers int
+		Name            string
+		QuantityMembers int
 	}
 
 	filesNames := searchUsersFiles()
@@ -269,16 +270,17 @@ func getUsersXML(context *gin.Context) {
 	tmpl, err := template.New("profileTemplate.xml").Funcs(template.FuncMap{
 		"getPoliticalParties": func(users []User) []PoliticalParty {
 			var parties []PoliticalParty
-			mapParties := make(map[string]*PoliticalParty)
+			mapParties := make(map[string]int)
 			for _, user := range users {
 				if user.PoliticalParty != "" {
-					mapParties[user.PoliticalParty].quantityMembers++
+					mapParties[user.PoliticalParty]++
 				}
 			}
 			//Make the map an array
 			for key, value := range mapParties {
-				value.name = key
-				parties = append(parties, *value)
+				party := PoliticalParty{key, value}
+				parties = append(parties, party)
+				fmt.Printf("PARTY: %s\n", party)
 			}
 			return parties
 		}}).ParseFiles("UserProfiles/profileTemplate.xml")
