@@ -283,6 +283,14 @@ func getUsersXML(context *gin.Context) {
 				fmt.Printf("PARTY: %s\n", party)
 			}
 			return parties
+		}, "getElectionsResult": func(parties []PoliticalParty) PoliticalParty {
+			maximum := 0
+			for index, party := range parties {
+				if parties[maximum].QuantityMembers < party.QuantityMembers {
+					maximum = index
+				}
+			}
+			return parties[maximum]
 		}}).ParseFiles("UserProfiles/profileTemplate.xml")
 	checkError(err, "The template file wasn't loaded")
 

@@ -1,4 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
+{{define "elections"}}
+	{{with getElectionsResult .}}
+		<winner>
+			<name>{{.Name}}</name>
+			<votes>{{.QuantityMembers}}</votes>
+		</winner>
+	{{end}}
+{{end}}
 {{define "politicalParties"}}
 	{{with getPoliticalParties .Users}}
 		<politicalParties>
@@ -9,6 +17,9 @@
 				</party>
 			{{end}}
 		</politicalParties>
+		<elections>
+			{{template "elections" .}}
+		</elections>
 	{{end}}
 {{end}}
 {{template "politicalParties" .}}
