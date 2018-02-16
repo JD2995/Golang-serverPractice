@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"reflect"
-	"strings"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
+	"github.com/santhosh-tekuri/jsonschema"
 )
 
 // List : Struc de lista
@@ -56,70 +56,56 @@ func fillUserProfile(user User) error {
 	return nil
 }
 
-func validRequiredFieldsJSON(structure interface{}, jsonBytes []byte) (map[string]*json.RawMessage, error) {
-	userMap := make(map[string]*json.RawMessage)
-	err := json.Unmarshal(jsonBytes, &userMap)
+func validRequiredFieldsJSON(structure interface{}, reader io.Reader) (bool, error) {
+	schema, err := jsonschema.Compile("userSchema.json")
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-
-	t := reflect.TypeOf(structure)
-	for i := 0; i < t.NumField(); i++ {
-		tagMap := make(map[string]string)
-		nameField := t.Field(i).Name
-		rawTag := strings.Replace(string(t.Field(i).Tag), "\"", "", -1)
-		tags := strings.Split(rawTag, " ")
-		for _, tag := range tags {
-			tagElements := strings.Split(tag, ":")
-			tagMap[tagElements[0]] = tagElements[1]
-
-		}
-
-		if tagMap["json"] != "" {
-			nameField = tagMap["json"]
-		}
-		//Doesn't matter if the value is not found
-		if tagMap["binding"] != "required" {
-			continue
-		}
-
-		//If the Required field is nil
-		if userMap[nameField] == nil {
-			return nil, fmt.Errorf("Required %s field not given", nameField)
-		}
+	if err = schema.Validate(reader); err != nil {
+		return false, err
 	}
-	return userMap, nil
+	return true, err
+
+}
+
+func checkErrorServer(context *gin.Context, err error) {
+	if err != nil {
+		context.AbortWithStatusJSON(400, gin.H{
+			"status":  "Error",
+			"message": err,
+		})
+	}
 }
 
 func uploadUser(context *gin.Context) {
 	fileHeader, err := context.FormFile("file")
-	if err != nil {
-		log.Printf("The file wasn't uploaded: %v\n", err)
-	}
+	checkErrorServer(context, err)
 
 	//Read the uploaded file
 	file, err := fileHeader.Open()
-	if err != nil {
-		log.Printf("Cannot read the file: %v\n", err)
-	}
-	buffer := make([]byte, 2048)
-	nBytes, err := file.Read(buffer)
-	if err != nil {
-		log.Printf("Cannot read the file: %v\n", err)
-	}
-	buffer = buffer[:nBytes]
+	checkErrorServer(context, err)
+	defer file.Close()
 
-	user, err := validRequiredFieldsJSON(User{}, buffer)
-	if err != nil {
+	//Validates that the info follows the schema
+	_, err = validRequiredFieldsJSON(User{}, file)
+	checkErrorServer(context, err)
+
+	//Obtain the ID of the user
+	user := make(map[string]interface{})
+	fileBytes := make([]byte, 4096)
+	file, _ = fileHeader.Open()
+	cantBytes, err := file.Read(fileBytes)
+	if err != nil && err != io.EOF {
 		log.Printf("Error: %v\n", err)
 		return
 	}
-	id := make([]byte, 2048)
-	user["ID"].UnmarshalJSON(id)
+	fileBytes = fileBytes[:cantBytes]
+	json.Unmarshal(fileBytes, &user)
+	id := user["ID"].(string)
+
+	//Save the uploaded file
 	err = context.SaveUploadedFile(fileHeader, "UserProfiles/"+string(id)+".json")
-	if err != nil {
-		log.Printf("The file wasn't saved: %v\n", err)
-	}
+	checkErrorServer(context, err)
 
 	context.JSON(201, gin.H{
 		"URI": "/user/" + string(id),

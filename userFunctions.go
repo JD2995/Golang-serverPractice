@@ -30,6 +30,7 @@ type User struct {
 	PoliticalParty string  `json:"politicalParty"`
 }
 
+// readUserFile reads the user file of a specified user by an id
 func readUserFile(userID string) ([]byte, error) {
 	//Tried to open the file
 	file, err := os.Open("UserProfiles/" + userID + ".json")
@@ -50,6 +51,7 @@ func readUserFile(userID string) ([]byte, error) {
 	return dataFile[:nBytes], nil
 }
 
+// structUserJSON obtain the user's info on the server and convert it on a user struct
 func structUserJSON(userID string) (User, error) {
 	var user User
 
@@ -65,6 +67,7 @@ func structUserJSON(userID string) (User, error) {
 	return user, nil
 }
 
+// mapUserJSON obtain the user's info on the server and convert it on a map
 func mapUserJSON(userID string) (map[string]*json.RawMessage, error) {
 	userMap := make(map[string]*json.RawMessage)
 
@@ -80,6 +83,7 @@ func mapUserJSON(userID string) (map[string]*json.RawMessage, error) {
 	return userMap, nil
 }
 
+// getUser handles the get request of all the user's info
 func getUser(context *gin.Context) {
 	defer recoverServerError(context)
 
@@ -94,6 +98,7 @@ func getUser(context *gin.Context) {
 	context.Data(200, "Content-Type: application/json", userData)
 }
 
+// getUserData handles the get request of specific user's data
 func getUserData(context *gin.Context) {
 	defer recoverServerError(context)
 
@@ -116,6 +121,7 @@ func getUserData(context *gin.Context) {
 	})
 }
 
+// deleteUser handles the delete request of an user
 func deleteUser(context *gin.Context) {
 	defer recoverServerError(context)
 
@@ -128,6 +134,7 @@ func deleteUser(context *gin.Context) {
 	context.Data(204, gin.MIMEHTML, nil)
 }
 
+// searchUsersFiles searchs the user files on the UserProfiles directory
 func searchUsersFiles() []string {
 	file, err := os.Open("UserProfiles")
 	checkError(err, "The user profile wasn't found")
@@ -149,6 +156,7 @@ func searchUsersFiles() []string {
 
 }
 
+// getUsers handles a get request to obtain the ids of all the users on the server
 func getUsers(context *gin.Context) {
 	defer recoverServerError(context)
 
@@ -160,6 +168,8 @@ func getUsers(context *gin.Context) {
 	context.JSON(200, names)
 }
 
+// postUser handles a post request that it has in it's body the user info
+// and saves it on the server
 func postUser(context *gin.Context) {
 	defer recoverServerError(context)
 
@@ -175,6 +185,7 @@ func postUser(context *gin.Context) {
 	})
 }
 
+// postUserData handles a post request that updates a specific value of the user
 func postUserData(context *gin.Context) {
 	defer recoverServerError(context)
 
@@ -212,6 +223,7 @@ func postUserData(context *gin.Context) {
 
 }
 
+// getUserXML return the user info and convert it to an xml file
 func getUserXML(context *gin.Context) {
 	defer recoverServerError(context)
 	id := context.Param("id")
@@ -245,6 +257,9 @@ func getUserXML(context *gin.Context) {
 
 }
 
+// getUsersXML obtain all the users found in the UserProfiles directory
+// Converts the info from json to xml and also perfoms an operation that
+// shows the politic parties that the users are members
 func getUsersXML(context *gin.Context) {
 	defer recoverServerError(context)
 

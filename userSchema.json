@@ -1,0 +1,42 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "type": "object",
+    "properties": {
+        "ID": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "lastname": {
+            "type": "string"
+        },
+        "phones": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "address": {
+            "type": "object",
+            "properties": {
+                "provincia":{
+                    "type": "string"
+                },
+                "canton":{
+                    "type": "string"
+                },
+                "distrito":{
+                    "type": "string"
+                }
+            },
+            "required": [
+                "provincia", "canton", "distrito"
+            ]
+        },
+        "politicalParty":{
+            "type": "string"
+        }
+    },
+    "required": [ "ID", "name", "lastname", "phones", "address" ]
+}
