@@ -39,6 +39,7 @@ func pingPong(context *gin.Context) {
 	})
 }
 
+// fillUserProfile fills a template json with a given user
 func fillUserProfile(user User) error {
 	tmpl, err := template.ParseFiles("UserProfiles/profileTemplate.json")
 	if err != nil {
@@ -56,6 +57,7 @@ func fillUserProfile(user User) error {
 	return nil
 }
 
+// validRequiredFieldsJSON validates with json schema a given json object on structure
 func validRequiredFieldsJSON(structure interface{}, reader io.Reader) (bool, error) {
 	schema, err := jsonschema.Compile("userSchema.json")
 	if err != nil {
@@ -77,6 +79,7 @@ func checkErrorServer(context *gin.Context, err error) {
 	}
 }
 
+// uploadUser handles the uploading of an user's file
 func uploadUser(context *gin.Context) {
 	fileHeader, err := context.FormFile("file")
 	checkErrorServer(context, err)

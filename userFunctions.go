@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -103,10 +102,10 @@ func getUserData(context *gin.Context) {
 	defer recoverServerError(context)
 
 	id := context.Param("id")
-
 	userMap, err := mapUserJSON(id)
 	checkError(err, "Fail to get of data")
 
+	//Try to obtain the wanted data
 	data := context.Param("data")
 	value := userMap[data]
 	if value == nil {
@@ -116,6 +115,7 @@ func getUserData(context *gin.Context) {
 		})
 		return
 	}
+	//Return the obtained data
 	context.JSON(200, gin.H{
 		data: value,
 	})
@@ -143,6 +143,7 @@ func searchUsersFiles() []string {
 	filesInfo, err := file.Readdir(0)
 	checkError(err, "Server error")
 
+	//Obtain the names of the files and deletes the .json extension
 	var fileNames []string
 	for _, value := range filesInfo {
 		fileName := value.Name()
@@ -232,11 +233,12 @@ func getUserXML(context *gin.Context) {
 		Users []User
 	}
 
-	//Recuperar archivo json
-	list := new(ListUsers)
+	//Obtain the user's data from the json file
 	user, err := structUserJSON(id)
 	checkError(err, "Fail to get of user data")
 
+	//Load and define the user xml template
+	list := new(ListUsers)
 	list.Users = append(list.Users, user)
 	tmpl, err := template.New("master").Funcs(template.FuncMap{
 		"getPoliticalParties": func(users []User) []string {
@@ -250,6 +252,7 @@ func getUserXML(context *gin.Context) {
 		}}).ParseFiles("UserProfiles/profileTemplate.xml")
 	checkError(err, "The template file wasn't loaded")
 
+	//Execute the user's data against the template
 	var buffer bytes.Buffer
 	err = tmpl.Execute(&buffer, list)
 	checkError(err, "Cannot execute template")
@@ -272,6 +275,7 @@ func getUsersXML(context *gin.Context) {
 		QuantityMembers int
 	}
 
+	//Gets all the user's data from the directory
 	filesNames := searchUsersFiles()
 	list := new(ListUsers)
 	for _, value := range filesNames {
@@ -282,6 +286,7 @@ func getUsersXML(context *gin.Context) {
 		list.Users = append(list.Users, user)
 	}
 
+	//Defines the template and its functions
 	tmpl, err := template.New("profileTemplate.xml").Funcs(template.FuncMap{
 		"getPoliticalParties": func(users []User) []PoliticalParty {
 			var parties []PoliticalParty
@@ -295,7 +300,6 @@ func getUsersXML(context *gin.Context) {
 			for key, value := range mapParties {
 				party := PoliticalParty{key, value}
 				parties = append(parties, party)
-				fmt.Printf("PARTY: %s\n", party)
 			}
 			return parties
 		}, "getElectionsResult": func(parties []PoliticalParty) PoliticalParty {
@@ -309,6 +313,7 @@ func getUsersXML(context *gin.Context) {
 		}}).ParseFiles("UserProfiles/profileTemplate.xml")
 	checkError(err, "The template file wasn't loaded")
 
+	//Executes the user's data against the template
 	var buffer bytes.Buffer
 	err = tmpl.Execute(&buffer, list)
 	checkError(err, "Cannot execute template")
