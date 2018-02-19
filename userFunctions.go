@@ -29,6 +29,12 @@ type User struct {
 	PoliticalParty string  `json:"politicalParty"`
 }
 
+// PoliticalParty : Describes the name and quantity of members
+type PoliticalParty struct {
+	Name            string
+	QuantityMembers int
+}
+
 // readUserFile reads the user file of a specified user by an id
 func readUserFile(userID string) ([]byte, error) {
 	//Tried to open the file
@@ -240,24 +246,44 @@ func getUserXML(context *gin.Context) {
 	//Load and define the user xml template
 	list := new(ListUsers)
 	list.Users = append(list.Users, user)
-	tmpl, err := template.New("master").Funcs(template.FuncMap{
-		"getPoliticalParties": func(users []User) []string {
-			var parties []string
-			for _, user := range users {
-				if user.PoliticalParty != "" {
-					parties = append(parties, user.PoliticalParty)
-				}
-			}
-			return parties
-		}}).ParseFiles("UserProfiles/profileTemplate.xml")
-	checkError(err, "The template file wasn't loaded")
-
+	tmpl, err := template.New("profileTemplate.xml").Funcs(template.FuncMap{
+		"getPoliticalParties": getPoliticalParties,
+		"getElectionsResult":  getElectionsResult,
+	}).ParseFiles("UserProfiles/profileTemplate.xml")
 	//Execute the user's data against the template
 	var buffer bytes.Buffer
 	err = tmpl.Execute(&buffer, list)
 	checkError(err, "Cannot execute template")
 	context.Data(200, "Content-Type: application/xml", buffer.Bytes())
 
+}
+
+// getPoliticalParties obtains all the political parties from a list of users
+func getPoliticalParties(users []User) []PoliticalParty {
+	var parties []PoliticalParty
+	mapParties := make(map[string]int)
+	for _, user := range users {
+		if user.PoliticalParty != "" {
+			mapParties[user.PoliticalParty]++
+		}
+	}
+	//Make the map an array
+	for key, value := range mapParties {
+		party := PoliticalParty{key, value}
+		parties = append(parties, party)
+	}
+	return parties
+}
+
+// getElectionsResult calc the winner of the elections
+func getElectionsResult(parties []PoliticalParty) PoliticalParty {
+	maximum := 0
+	for index, party := range parties {
+		if parties[maximum].QuantityMembers < party.QuantityMembers {
+			maximum = index
+		}
+	}
+	return parties[maximum]
 }
 
 // getUsersXML obtain all the users found in the UserProfiles directory
@@ -268,11 +294,6 @@ func getUsersXML(context *gin.Context) {
 
 	type ListUsers struct {
 		Users []User
-	}
-
-	type PoliticalParty struct {
-		Name            string
-		QuantityMembers int
 	}
 
 	//Gets all the user's data from the directory
@@ -288,29 +309,9 @@ func getUsersXML(context *gin.Context) {
 
 	//Defines the template and its functions
 	tmpl, err := template.New("profileTemplate.xml").Funcs(template.FuncMap{
-		"getPoliticalParties": func(users []User) []PoliticalParty {
-			var parties []PoliticalParty
-			mapParties := make(map[string]int)
-			for _, user := range users {
-				if user.PoliticalParty != "" {
-					mapParties[user.PoliticalParty]++
-				}
-			}
-			//Make the map an array
-			for key, value := range mapParties {
-				party := PoliticalParty{key, value}
-				parties = append(parties, party)
-			}
-			return parties
-		}, "getElectionsResult": func(parties []PoliticalParty) PoliticalParty {
-			maximum := 0
-			for index, party := range parties {
-				if parties[maximum].QuantityMembers < party.QuantityMembers {
-					maximum = index
-				}
-			}
-			return parties[maximum]
-		}}).ParseFiles("UserProfiles/profileTemplate.xml")
+		"getPoliticalParties": getPoliticalParties,
+		"getElectionsResult":  getElectionsResult,
+	}).ParseFiles("UserProfiles/profileTemplate.xml")
 	checkError(err, "The template file wasn't loaded")
 
 	//Executes the user's data against the template

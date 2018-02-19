@@ -22,7 +22,9 @@
 		</elections>
 	{{end}}
 {{end}}
-{{template "politicalParties" .}}
+{{if gt (len .Users) 1}}
+	{{template "politicalParties" .}}
+{{end}}
 <users>
 	{{range .Users}}
 	<user>
